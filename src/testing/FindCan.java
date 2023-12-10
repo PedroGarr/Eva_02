@@ -1,5 +1,5 @@
 // This is also a class created alongside test EV3Skeleton with the purpose of testing the functionalities of the robot.
-package engines;
+package testing;
 import lejos.hardware.Button;
 
 

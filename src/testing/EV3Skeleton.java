@@ -1,6 +1,6 @@
 // This is supposed to be an early class of testing for the engines and sensors of the robot. We will not use this in production;
 // Only letting it here to keep a record;
-package engines;
+package testing;
 
 
 import lejos.hardware.Brick;
