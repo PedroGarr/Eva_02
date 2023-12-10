@@ -1,8 +1,5 @@
+// This is also a class created alongside test EV3Skeleton with the purpose of testing the functionalities of the robot.
 package engines;
-
-
-//package *add package name here*;
-
 import lejos.hardware.Button;
 
 
@@ -18,7 +15,7 @@ public class FindCan extends EV3Skeleton {
      System.out.println("Press any button to start!");
      Button.waitForAnyPress();
 
-     // Add your code below here
+    
      
      // Rotate slowly so the ultrasonic sensor has time to react
      pilot.setAngularSpeed(60);
