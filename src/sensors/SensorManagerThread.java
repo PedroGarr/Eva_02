@@ -5,9 +5,7 @@ import lejos.hardware.sensor.EV3UltrasonicSensor;
 import lejos.hardware.sensor.MindsensorsDistanceSensorV2;
 import lejos.hardware.sensor.NXTTouchSensor;
 import lejos.hardware.port.Port;
-
-import java.awt.desktop.UserSessionListener;
-
+import lejos.hardware.port.SensorPort;
 import lejos.hardware.BrickFinder;
 import lejos.hardware.ev3.EV3;
 import lejos.robotics.Color;
@@ -15,10 +13,31 @@ import lejos.robotics.SampleProvider;
 import lejos.hardware.motor.*;
 import lejos.hardware.Button;
 
+/**
+ * The `SensorManagerThread` class provides a threaded interface for managing various sensors
+ * on a robotic platform. It includes support for an ultrasonic sensor, touch sensor, and potential
+ * color sensor (commented out in the current implementation). The class initializes the sensors,
+ * sets up their modes, and runs threads for monitoring distance, touch, and potential interference.
+ * The distance and touch sensor threads provide continuous updates, and the class includes methods
+ * to check for obstacles, detect touches, and get distance readings.
+ *
+ * The class is designed to be used in conjunction with a robotic system where threaded sensor monitoring
+ * is essential for real-time decision-making. The ultrasonic sensor is used for distance measurement,
+ * the touch sensor for detecting physical contact, and the potential color sensor for color detection
+ * (currently commented out). The class also includes methods for handling obstacles and potential
+ * interference, though the interference method is currently commented out.
+ *
+ * The class implements a basic structure for threading and continuous monitoring of sensors,
+ * providing a foundation for integrating additional sensors and behaviors into a robotic system.
+ * Additionally, the class includes a method for checking if the robot is close to a certain object.
+ * 
+ * @author Alain, Mohtadi
+ */
+
 public class SensorManagerThread {
 	//oject detection distance 
-	double minD=2200.0;
-	
+	double minD=2;
+	Port port;
 	//color fields 
 	/*
 	private EV3ColorSensor colorSensor;
@@ -32,29 +51,31 @@ public class SensorManagerThread {
 	static int[] WHITE = {75,57,48}; 
 	static int[] BLACK = {6,6,6};
 	*/
-
+	Port port4=(Port) SensorPort.S4;
+	Port port3=(Port) SensorPort.S3;
+	Port port2=(Port) SensorPort.S2;
 	//ultrasonic fields 
 	private EV3UltrasonicSensor uSDistance;
 	private SampleProvider uSDSampleProvider;// for distance 
 	private float[] uSDSample; // for distence
-	private EV3UltrasonicSensor uSListen;
-	private SampleProvider uSLSampleProvider;// for interference
-	private float[] uSLSample; // for interference
+	
 
 	//touch
 	private NXTTouchSensor touch;
 	private SampleProvider tSampleProvider;
 	private float[] tSample;
 
-	// Constructor that initializes the color sensor
-	public SensorManagerThread(Port s4, Port s3, Port s2) {
+	 /**
+     * Constructor that initializes the color sensor, ultrasonic sensor, and touch sensor.
+     * It sets up the necessary ports, modes, and threading for continuous monitoring.
+     */
+	public SensorManagerThread() {
 		// setting port
-		if(s3==null && s2==null && s4==null)
+		if(port3==null && port2==null && port4==null)
 			throw new IllegalArgumentException();
 		//ultrasonic 
-		else if(s4.getName()=="S4") {
-			uSDistance= new EV3UltrasonicSensor(s4); // Create uSDistance instance connected to s4 port
-			uSListen = uSDistance; // Create uSListen instance and connected to s4 
+		else if(port4.getName().equals("S4")) {
+			uSDistance= new EV3UltrasonicSensor(port4); // Create uSDistance instance connected to s4 port
 		}
 		//color
 		/*
@@ -62,15 +83,14 @@ public class SensorManagerThread {
 			this.colorSensor = new EV3ColorSensor(s3); // Create a new color sensor instance
 		*/
 		//touch
-		else if(s2.getName()=="S2") {
-			touch = new NXTTouchSensor(s2);// Create touche instance
+		else if(port2.getName().equals("S2")) {
+			touch = new NXTTouchSensor(port2);// Create touche instance
 		}
 		//camera
 		//TODO camera setting
 
 		//mode attribution
 		this.uSDSampleProvider = uSDistance.getDistanceMode();// Set the distance mode
-		this.uSLSampleProvider = uSListen.getListenMode();// Set the listen mode    	
 		//**************************
 		//this lines of code got problems on testing 
 		//TODO Debug thisa
@@ -90,7 +110,7 @@ public class SensorManagerThread {
 				while (true) {
 					float distance = getDistance();
 					// Vous pouvez ajouter ici la logique de réaction basée sur la distance.
-
+						
 					// Attendez un certain temps entre les lectures pour éviter de lire en continu.
 					try {
 						Thread.sleep(100);
@@ -152,10 +172,11 @@ public class SensorManagerThread {
 	}
 
 
-	/*
-	 * ultrasonic management
-	 * */
-	//return distance in milimeters 
+	 /**
+     * Returns the distance measured by the ultrasonic sensor in millimeters.
+     *
+     * @return The distance measured by the ultrasonic sensor in millimeters.
+     */
 
 	public float getDistance() { 
 		// Assurez-vous que le capteur ultrasonique est correctement initialisé.
@@ -191,9 +212,13 @@ public class SensorManagerThread {
 		}
 	}
 	 */
-	/*
-	 * Touch sensor
-	 * */
+	
+	/**
+	 * Checks whether the touch sensor detects a physical contact or pressure.
+	 *
+	 * @return True if the touch sensor detects a contact (pressure), false otherwise.
+	 *         If the touch sensor is not properly initialized, it returns false by default.
+	 */
 	public boolean isTouching() {
 		// Assurez-vous que le capteur tactile est correctement initialisé.
 		if (tSampleProvider != null) {
@@ -201,6 +226,7 @@ public class SensorManagerThread {
 			tSampleProvider.fetchSample(tSample, 0);
 
 			// Si le capteur tactile détecte un contact (pression), retournez true, sinon retournez false.
+			
 			return tSample[0] > 0.0;
 		} else {
 			// Le capteur tactile n'est pas initialisé.
@@ -263,12 +289,12 @@ public class SensorManagerThread {
 				&& Math.abs(color.getBlue() - referenceColor[2]) <= tolerance;
 	}
 	*/
-	/*
-	 * détection d'obstacle
-	 * Cet methode détecte la présence d'obstacle 
-	 * et une autre methode verifiera le type de l'obstacle s'il y en a un.
-	 * distance limite théorique  2.30 (m)
-	 * */
+	
+	/**
+     * Checks if an obstacle is detected based on the predefined minimum distance.
+     *
+     * @return True if an obstacle is detected, false otherwise.
+     */
 	public boolean isObstacle() {
 		float d = getDistance();
 		//code comented is usefull only if interference work and is used other ways
@@ -279,6 +305,17 @@ public class SensorManagerThread {
 			return false;
 		}
 		return true;
+	}
+	
+	/**
+     * Checks if the robot picles is close to an object.
+     *
+     * @return True if the robot is close to an object, false otherwise.
+     */
+	public boolean close() {
+		uSDSampleProvider.fetchSample(uSDSample,0);
+		float distance = uSDSample[0]*1000;
+		return distance <10;
 	}
 
 
@@ -294,8 +331,5 @@ public class SensorManagerThread {
 
 
 
-	public static void main(String[] args) {
-		//note pour teste trouver un moyens pour stocker les informations dans un doccument à part et le relire pour la reconaissance d'objet dans une boucle
-
-	}
+	
 }

@@ -1,5 +1,8 @@
 package sensors;
-
+/**
+* @version 1.0
+* refer to SensorManagerThread
+*/
 import lejos.hardware.sensor.EV3ColorSensor;
 import lejos.hardware.sensor.EV3UltrasonicSensor;
 import lejos.hardware.sensor.MindsensorsDistanceSensorV2;
